@@ -15,6 +15,7 @@ enum CommandParseAction {
     RemoveDepartment,
 }
 
+#[derive(Clone)]
 struct Department {
     name: String,
 }
@@ -44,26 +45,35 @@ impl Employee {
     }
 }
 
-fn parse_command(command: String) -> Result<(), CommandParseError> {
+fn parse_command(command: String) -> Result<CommandParseAction, CommandParseError> {
     let words: Vec<&str> = command.split(' ').collect();
     if words.len() != 4 {
         return Err(CommandParseError::WrongAmountOfArguments);
     }
     if (words[0] == "add") && (words[2] == "to") {
-        return Ok(());
+        return Ok(CommandParseAction::AddEmployeeToDepartment);
     }
     Err(CommandParseError::InvalidCommand)
 }
 
 fn main() {
-    let _empls: Vec<Employee> = Vec::new();
-    let _dprts: Vec<Department> = Vec::new();
-
     dioxus::launch(App);
 }
 
 #[component]
 fn App() -> Element {
+    let mut empls: Vec<Employee> = vec![];
+    let mut dprts: Vec<Department> = vec![];
+
+    dprts.push(Department::new("Front desk".to_string()));
+    dprts.push(Department::new("IT".to_string()));
+    dprts.push(Department::new("Accounting".to_string()));
+
+    empls.push(Employee::new(
+        "John Smith".to_string(),
+        Some(dprts[0].clone()),
+    ));
+
     rsx! {
         div {
             // display sets the layout mode of the element
