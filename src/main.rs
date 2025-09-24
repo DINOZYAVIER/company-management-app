@@ -15,33 +15,31 @@ enum CommandParseAction {
     RemoveDepartment,
 }
 
-#[derive(Clone)]
-struct Department {
-    name: String,
+#[derive(PartialEq, Props, Clone)]
+struct Departments {
+    names: Vec<String>,
 }
 
-impl Department {
-    fn new(department_name: String) -> Department {
-        Department {
-            name: department_name,
-        }
+impl Departments {
+    fn new() -> Departments {
+        Departments { names: Vec::new() }
+    }
+    fn add_department(&mut self, department_name: String) {
+        self.names.push(department_name);
     }
 }
 
-struct Employee {
-    name: String,
-    department: Option<Department>,
+#[derive(PartialEq, Props, Clone)]
+struct Employees {
+    names: Vec<String>,
 }
 
-impl Employee {
-    fn new(employee_name: String, department: Option<Department>) -> Employee {
-        Employee {
-            name: employee_name,
-            department,
-        }
+impl Employees {
+    fn new() -> Employees {
+        Employees { names: Vec::new() }
     }
-    fn set_department(mut self, new_department: Department) {
-        self.department = Some(new_department);
+    fn add_employee(&mut self, employee_name: String) {
+        self.names.push(employee_name);
     }
 }
 
@@ -62,31 +60,36 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let mut empls: Vec<Employee> = vec![];
-    let mut dprts: Vec<Department> = vec![];
+    let mut empls = Employees::new();
+    let mut dprts = Departments::new();
 
-    dprts.push(Department::new("Front desk".to_string()));
-    dprts.push(Department::new("IT".to_string()));
-    dprts.push(Department::new("Accounting".to_string()));
+    dprts.add_department("Front desk".to_string());
+    dprts.add_department("IT".to_string());
+    dprts.add_department("Accounting".to_string());
 
-    empls.push(Employee::new(
-        "John Smith".to_string(),
-        Some(dprts[0].clone()),
-    ));
+    empls.add_employee("John Smith".to_string());
 
     rsx! {
         div {
-            // display sets the layout mode of the element
             display: "flex",
-            // justify-content centers the element horizontally
             justify_content: "center",
-            input {
-                type: "string"
-            },
-            button {
-                //onclick: move |_| "Increment"
+            flex_direction: "column",
+            align_items: "center",
+            h1 { "Departments" }
+            ul {
+                for department in {dprts.names} {
+                    li { "{department}" }
+                }
             }
-
+            h1 { "Employees" }
+            ul {
+                for employee in {empls.names} {
+                    li { "{employee}" }
+                }
+            }
+            button {
+                "Add Employee"
+            }
         }
     }
 }
