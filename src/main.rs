@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use std::collections::HashMap;
 use std::vec;
 
 enum CommandParseError {
@@ -16,30 +17,35 @@ enum CommandParseAction {
 }
 
 #[derive(PartialEq, Props, Clone)]
-struct Departments {
-    names: Vec<String>,
+struct DepartmentManager {
+    empl_in_dep: HashMap<String, String>,
+    empl_names: Vec<String>,
+    dprt_names: Vec<String>,
 }
 
-impl Departments {
-    fn new() -> Departments {
-        Departments { names: Vec::new() }
+impl DepartmentManager {
+    fn new() -> DepartmentManager {
+        DepartmentManager {
+            empl_in_dep: HashMap::new(),
+            empl_names: Vec::new(),
+            dprt_names: Vec::new(),
+        }
     }
+
     fn add_department(&mut self, department_name: String) {
-        self.names.push(department_name);
+        self.dprt_names.push(department_name);
     }
-}
 
-#[derive(PartialEq, Props, Clone)]
-struct Employees {
-    names: Vec<String>,
-}
-
-impl Employees {
-    fn new() -> Employees {
-        Employees { names: Vec::new() }
-    }
     fn add_employee(&mut self, employee_name: String) {
-        self.names.push(employee_name);
+        self.empl_names.push(employee_name);
+    }
+
+    fn employees(&self) -> Vec<String> {
+        self.empl_names.clone()
+    }
+
+    fn departments(&self) -> Vec<String> {
+        self.dprt_names.clone()
     }
 }
 
@@ -60,14 +66,15 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let mut empls = Employees::new();
-    let mut dprts = Departments::new();
+    let mut dep_manager = DepartmentManager::new();
 
-    dprts.add_department("Front desk".to_string());
-    dprts.add_department("IT".to_string());
-    dprts.add_department("Accounting".to_string());
+    dep_manager.add_department("Front desk".to_string());
+    dep_manager.add_department("IT".to_string());
+    dep_manager.add_department("Accounting".to_string());
 
-    empls.add_employee("John Smith".to_string());
+    dep_manager.add_employee("John Smith".to_string());
+    dep_manager.add_employee("Ivan Ivanenko".to_string());
+    dep_manager.add_employee("Jane Doe".to_string());
 
     rsx! {
         div {
@@ -76,15 +83,36 @@ fn App() -> Element {
             flex_direction: "column",
             align_items: "center",
             h1 { "Departments" }
-            ul {
-                for department in {dprts.names} {
-                    li { "{department}" }
+            table {
+                thead {
+                    tr {
+                        th { "Department Name" }
+                    }
+                }
+                tbody {
+                    for department in {dep_manager.departments()} {
+                        tr {
+                            td { "{department}" }
+                        }
+                    }
                 }
             }
+            button {
+                "Add Department"
+            }
             h1 { "Employees" }
-            ul {
-                for employee in {empls.names} {
-                    li { "{employee}" }
+            table {
+                thead {
+                    tr {
+                        th { "Employee Name" }
+                    }
+                }
+                tbody {
+                for employee in {dep_manager.employees()} {
+                        tr {
+                            td { "{employee}" }
+                        }
+                    }
                 }
             }
             button {
