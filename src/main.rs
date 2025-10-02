@@ -1,4 +1,9 @@
 use dioxus::prelude::*;
+use dioxus_primitives::select::{
+    self, SelectGroupLabelProps, SelectGroupProps, SelectListProps, SelectOptionProps, SelectProps,
+    SelectTriggerProps, SelectValueProps,
+};
+
 use std::collections::HashMap;
 use std::vec;
 
@@ -18,7 +23,7 @@ enum CommandParseAction {
 
 #[derive(PartialEq, Props, Clone)]
 struct DepartmentManager {
-    empl_in_dep: HashMap<String, String>,
+    empl_in_dep: HashMap<String, Option<String>>,
     empl_names: Vec<String>,
     dprt_names: Vec<String>,
 }
@@ -38,6 +43,14 @@ impl DepartmentManager {
 
     fn add_employee(&mut self, employee_name: String) {
         self.empl_names.push(employee_name);
+    }
+
+    fn assign_employee_to_department(&mut self, employee: String, department: Option<String>) {
+        self.empl_in_dep.insert(employee, department);
+    }
+
+    fn get_department_for_employee(&mut self, employee: String) -> Option<String> {
+        self.empl_in_dep.get(&employee).cloned()?
     }
 
     fn employees(&self) -> Vec<String> {
@@ -76,31 +89,93 @@ fn App() -> Element {
     dep_manager.add_employee("Ivan Ivanenko".to_string());
     dep_manager.add_employee("Jane Doe".to_string());
 
+    let dep_option = |i: usize, dep_name: String| {
+        rsx! {
+            select::SelectOption::<String> { index: i, value: dep_name.clone(), text_value: "hello",
+                "{dep_name}"
+                select::SelectItemIndicator {}
+            }
+
+        }
+    };
+
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             display: "flex",
             justify_content: "center",
             flex_direction: "column",
             align_items: "center",
-            h1 { "Departments" }
             table {
-                thead {
-                    tr {
-                        th { "Department Name" }
+                tr {
+                    th {
+                        h1 { "Departments" }
+                        table {
+                            thead {
+                                tr {
+                                    th { "Department Name" }
+                                }
+                            }
+                            tbody {
+                                for department in {dep_manager.departments()} {
+                                    tr {
+                                        td {
+                                            div {
+                                                style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
+                                                "{department}"
+                                                button { "X" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        div {
+                            style: "display: flex; justify-content: center; align-items: center; width: 100%;",
+                            input {
+                                r#type: "text",
+                                placeholder: "Enter department name"
+                            }
+                            button {
+                                "Add Department"
+                            }
+                        }
                     }
-                }
-                tbody {
-                    for department in {dep_manager.departments()} {
-                        tr {
-                            td { "{department}" }
+                    th {
+                        h1 { "Employees" }
+                        table {
+                            thead {
+                                tr {
+                                    th { "Employee Name" }
+                                }
+                            }
+                            tbody {
+                                for employee in {dep_manager.employees()} {
+                                    tr {
+                                        td {
+                                            div {
+                                                style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
+                                                "{employee}"
+                                                button { "X" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        div {
+                            style: "display: flex; justify-content: center; align-items: center; width: 100%;",
+                            input {
+                                r#type: "text",
+                                placeholder: "Enter employee name"
+                            }
+                            button {
+                                "Add Employee"
+                            }
                         }
                     }
                 }
             }
-            button {
-                "Add Department"
-            }
-            h1 { "Employees" }
             table {
                 thead {
                     tr {
@@ -108,15 +183,48 @@ fn App() -> Element {
                     }
                 }
                 tbody {
-                for employee in {dep_manager.employees()} {
+                    for employee in {dep_manager.employees()} {
                         tr {
-                            td { "{employee}" }
+                            td {
+                                div {
+                                    style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
+                                    "{employee}"
+
+                                        select::Select::<Option<String>> { placeholder: "Select department",
+                                        select::SelectTrigger { aria_label: "Select Trigger", width: "12rem", select::SelectValue {} }
+                                        select::SelectList { aria_label: "Select Demo",
+                                            select::SelectGroup {
+                                                select::SelectGroupLabel { "Departments" }
+
+                                                for (index, department) in dep_manager.departments().into_iter().enumerate() {
+                                                    {dep_option(index, department)}
+                                                }
+                                            }
+                                            select::SelectGroup {
+                                                select::SelectGroupLabel { "Other" }
+                                                select::SelectOption::<Option<String>> {
+                                                    index: dep_manager.employees().len(),
+                                                    value: None,
+                                                    text_value: "Other",
+                                                    select::SelectItemIndicator {}
+                                                }
+                                            }
+                                        }
+                                    }
+                                    /*select::Select::<Option<String>> {
+                                        value: "{dep_manager.employees().get(employee)}",
+                                        select::SelectTrigger { aria_label: "Select Trigger", width: "12rem", select::SelectValue {} }
+                                        select::SelectList { aria_label: "Department",
+                                            select::SelectGroup {
+                                                select::SelectGroupLabel { "Departments" }
+                                            }
+                                        }
+                                    }*/
+                                }
+                            }
                         }
                     }
                 }
-            }
-            button {
-                "Add Employee"
             }
         }
     }
