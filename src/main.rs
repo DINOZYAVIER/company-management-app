@@ -79,25 +79,29 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let mut dep_manager = DepartmentManager::new();
-
-    dep_manager.add_department("Front desk".to_string());
-    dep_manager.add_department("IT".to_string());
-    dep_manager.add_department("Accounting".to_string());
-
-    dep_manager.add_employee("John Smith".to_string());
-    dep_manager.add_employee("Ivan Ivanenko".to_string());
-    dep_manager.add_employee("Jane Doe".to_string());
-
     let dep_option = |i: usize, dep_name: String| {
         rsx! {
-            select::SelectOption::<String> { index: i, value: dep_name.clone(), text_value: "hello",
+            select::SelectOption::<String> { index: i, value: dep_name.clone(), text_value: "{dep_name}",
                 "{dep_name}"
                 select::SelectItemIndicator {}
             }
-
         }
     };
+
+    static DEP_MANAGER: GlobalSignal<DepartmentManager> =
+        Signal::global(|| DepartmentManager::new());
+
+    DEP_MANAGER.write().add_department("Front desk".to_string());
+    DEP_MANAGER.write().add_department("IT".to_string());
+    DEP_MANAGER.write().add_department("Accounting".to_string());
+
+    DEP_MANAGER.write().add_employee("John Smith".to_string());
+    DEP_MANAGER
+        .write()
+        .add_employee("Ivan Ivanenko".to_string());
+    DEP_MANAGER.write().add_employee("Jane Doe".to_string());
+    //let mut collThing = use_DEP_MANAGER.write()(|dep_manager: DepartmentManager| dep_manager);
+    //let mut dep_man_clos = use_signal(|| DEP_MANAGER.write().assign);
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -117,7 +121,7 @@ fn App() -> Element {
                                 }
                             }
                             tbody {
-                                for department in {dep_manager.departments()} {
+                                for department in {DEP_MANAGER.read().departments()} {
                                     tr {
                                         td {
                                             div {
@@ -150,7 +154,7 @@ fn App() -> Element {
                                 }
                             }
                             tbody {
-                                for employee in {dep_manager.employees()} {
+                                for employee in {DEP_MANAGER.read().employees()} {
                                     tr {
                                         td {
                                             div {
@@ -183,28 +187,31 @@ fn App() -> Element {
                     }
                 }
                 tbody {
-                    for employee in {dep_manager.employees()} {
+                    for employee in DEP_MANAGER.read().employees() {
                         tr {
                             td {
                                 div {
                                     style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
                                     "{employee}"
 
-                                        select::Select::<Option<String>> { placeholder: "Select department",
+                                        select::Select::<String> { placeholder: "Select department",
+                                        on_value_change: move |value: Option<String>| {
+                                            //DEP_MANAGER.write().assign_employee_to_department(employee.clone(), value);
+                                        },
                                         select::SelectTrigger { aria_label: "Select Trigger", width: "12rem", select::SelectValue {} }
                                         select::SelectList { aria_label: "Select Demo",
                                             select::SelectGroup {
                                                 select::SelectGroupLabel { "Departments" }
 
-                                                for (index, department) in dep_manager.departments().into_iter().enumerate() {
+                                                for (index, department) in DEP_MANAGER.read().departments().into_iter().enumerate() {
                                                     {dep_option(index, department)}
                                                 }
                                             }
                                             select::SelectGroup {
                                                 select::SelectGroupLabel { "Other" }
-                                                select::SelectOption::<Option<String>> {
-                                                    index: dep_manager.employees().len(),
-                                                    value: None,
+                                                select::SelectOption::<String> {
+                                                    index: DEP_MANAGER.read().employees().len(),
+                                                    value: "Other",
                                                     text_value: "Other",
                                                     select::SelectItemIndicator {}
                                                 }
@@ -212,7 +219,7 @@ fn App() -> Element {
                                         }
                                     }
                                     /*select::Select::<Option<String>> {
-                                        value: "{dep_manager.employees().get(employee)}",
+                                        value: "{DEP_MANAGER.write().employees().get(employee)}",
                                         select::SelectTrigger { aria_label: "Select Trigger", width: "12rem", select::SelectValue {} }
                                         select::SelectList { aria_label: "Department",
                                             select::SelectGroup {
