@@ -7,20 +7,6 @@ use dioxus_primitives::select::{
 use std::collections::HashMap;
 use std::vec;
 
-enum CommandParseError {
-    InvalidCommand,
-    WrongAmountOfArguments,
-}
-
-enum CommandParseAction {
-    AddEmployeeToDepartment,
-    RemoveEmployeeFromDepartment,
-    CreateEmployee,
-    CreateDepartment,
-    RemoveEmployee,
-    RemoveDepartment,
-}
-
 #[derive(PartialEq, Props, Clone)]
 struct DepartmentManager {
     empl_in_dep: HashMap<String, Option<String>>,
@@ -59,10 +45,6 @@ impl DepartmentManager {
         self.empl_in_dep.insert(employee, department);
     }
 
-    fn get_department_for_employee(&mut self, employee: String) -> Option<String> {
-        self.empl_in_dep.get(&employee).cloned()?
-    }
-
     fn employees(&self) -> Vec<String> {
         self.empl_names.clone()
     }
@@ -70,18 +52,6 @@ impl DepartmentManager {
     fn departments(&self) -> Vec<String> {
         self.dprt_names.clone()
     }
-}
-
-fn parse_command(command: String) -> Result<CommandParseAction, CommandParseError> {
-    let words: Vec<&str> = command.split(' ').collect();
-
-    if words.len() != 4 {
-        return Err(CommandParseError::WrongAmountOfArguments);
-    }
-    if (words[0] == "add") && (words[2] == "to") {
-        return Ok(CommandParseAction::AddEmployeeToDepartment);
-    }
-    Err(CommandParseError::InvalidCommand)
 }
 
 static DEP_MANAGER: GlobalSignal<DepartmentManager> = Signal::global(DepartmentManager::new);
@@ -192,10 +162,10 @@ fn App() -> Element {
                                     style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
                                     "{employee}"
 
-                                        select::Select::<String> { placeholder: "Select department",
+                                        select::Select::<String> {
+                                        placeholder: "Select department",
                                         on_value_change: move |value: Option<String>| {
                                             DEP_MANAGER.write().assign_employee_to_department(employee.clone(), value);
-                                            print!("{}", DEP_MANAGER.read().departments().len());
                                         },
                                         select::SelectTrigger { aria_label: "Select Trigger", width: "12rem", select::SelectValue {} }
                                         select::SelectList { aria_label: "Select Demo",
@@ -204,15 +174,6 @@ fn App() -> Element {
 
                                                 for (index, department) in DEP_MANAGER.read().departments().into_iter().enumerate() {
                                                     {dep_option(index, department)}
-                                                }
-                                            }
-                                            select::SelectGroup {
-                                                select::SelectGroupLabel { "Other" }
-                                                select::SelectOption::<String> {
-                                                    index: DEP_MANAGER.read().employees().len(),
-                                                    value: "Other",
-                                                    text_value: "Other",
-                                                    select::SelectItemIndicator {}
                                                 }
                                             }
                                         }
