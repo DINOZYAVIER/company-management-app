@@ -30,7 +30,7 @@ impl DepartmentManager {
         dep_manager.add_employee("Ivan Ivanenko".to_string());
         dep_manager.add_employee("Jane Doe".to_string());
 
-        return dep_manager;
+        dep_manager
     }
 
     fn add_department(&mut self, department_name: String) {
@@ -39,6 +39,13 @@ impl DepartmentManager {
 
     fn add_employee(&mut self, employee_name: String) {
         self.empl_names.push(employee_name);
+    }
+
+    fn remove_department(&mut self, index: usize) {
+        self.dprt_names.remove(index);
+    }
+    fn remove_employee(&mut self, index: usize) {
+        self.empl_names.remove(index);
     }
 
     fn assign_employee_to_department(&mut self, employee: String, department: Option<String>) {
@@ -71,6 +78,9 @@ fn App() -> Element {
         }
     };
 
+    let mut input_dep = use_signal(|| String::new());
+    let mut input_empl = use_signal(|| String::new());
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
@@ -89,13 +99,15 @@ fn App() -> Element {
                                 }
                             }
                             tbody {
-                                for department in {DEP_MANAGER.read().departments()} {
+
+                                for (index, department) in DEP_MANAGER.read().departments().into_iter().enumerate() {
                                     tr {
                                         td {
                                             div {
                                                 style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
                                                 "{department}"
-                                                button { "X" }
+                                                button { onclick: move |_event| DEP_MANAGER.write().remove_department(index),
+                                                "X"}
                                             }
                                         }
                                     }
@@ -106,9 +118,10 @@ fn App() -> Element {
                             style: "display: flex; justify-content: center; align-items: center; width: 100%;",
                             input {
                                 r#type: "text",
-                                placeholder: "Enter department name"
+                                placeholder: "Enter department name",
+                                oninput: move |event| input_dep.set(event.value().clone()),
                             }
-                            button {
+                            button {  onclick: move |_event| DEP_MANAGER.write().add_department(input_dep().clone()),
                                 "Add Department"
                             }
                         }
@@ -122,13 +135,15 @@ fn App() -> Element {
                                 }
                             }
                             tbody {
-                                for employee in {DEP_MANAGER.read().employees()} {
+
+                                for (index, employee) in DEP_MANAGER.read().employees().into_iter().enumerate() {
                                     tr {
                                         td {
                                             div {
                                                 style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
                                                 "{employee}"
-                                                button { "X" }
+                                                button { onclick: move |_event| DEP_MANAGER.write().remove_employee(index),
+                                                "X"}
                                             }
                                         }
                                     }
@@ -139,9 +154,10 @@ fn App() -> Element {
                             style: "display: flex; justify-content: center; align-items: center; width: 100%;",
                             input {
                                 r#type: "text",
-                                placeholder: "Enter employee name"
+                                placeholder: "Enter employee name",
+                                oninput: move |event| input_empl.set(event.value().clone()),
                             }
-                            button {
+                            button {  onclick: move |_event| DEP_MANAGER.write().add_employee(input_empl().clone()),
                                 "Add Employee"
                             }
                         }
