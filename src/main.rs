@@ -30,11 +30,21 @@ struct DepartmentManager {
 
 impl DepartmentManager {
     fn new() -> DepartmentManager {
-        DepartmentManager {
+        let mut dep_manager = DepartmentManager {
             empl_in_dep: HashMap::new(),
             empl_names: Vec::new(),
             dprt_names: Vec::new(),
-        }
+        };
+
+        dep_manager.add_department("Front desk".to_string());
+        dep_manager.add_department("IT".to_string());
+        dep_manager.add_department("Accounting".to_string());
+
+        dep_manager.add_employee("John Smith".to_string());
+        dep_manager.add_employee("Ivan Ivanenko".to_string());
+        dep_manager.add_employee("Jane Doe".to_string());
+
+        return dep_manager;
     }
 
     fn add_department(&mut self, department_name: String) {
@@ -64,6 +74,7 @@ impl DepartmentManager {
 
 fn parse_command(command: String) -> Result<CommandParseAction, CommandParseError> {
     let words: Vec<&str> = command.split(' ').collect();
+
     if words.len() != 4 {
         return Err(CommandParseError::WrongAmountOfArguments);
     }
@@ -72,6 +83,8 @@ fn parse_command(command: String) -> Result<CommandParseAction, CommandParseErro
     }
     Err(CommandParseError::InvalidCommand)
 }
+
+static DEP_MANAGER: GlobalSignal<DepartmentManager> = Signal::global(DepartmentManager::new);
 
 fn main() {
     dioxus::launch(App);
@@ -87,21 +100,6 @@ fn App() -> Element {
             }
         }
     };
-
-    static DEP_MANAGER: GlobalSignal<DepartmentManager> =
-        Signal::global(|| DepartmentManager::new());
-
-    DEP_MANAGER.write().add_department("Front desk".to_string());
-    DEP_MANAGER.write().add_department("IT".to_string());
-    DEP_MANAGER.write().add_department("Accounting".to_string());
-
-    DEP_MANAGER.write().add_employee("John Smith".to_string());
-    DEP_MANAGER
-        .write()
-        .add_employee("Ivan Ivanenko".to_string());
-    DEP_MANAGER.write().add_employee("Jane Doe".to_string());
-    //let mut collThing = use_DEP_MANAGER.write()(|dep_manager: DepartmentManager| dep_manager);
-    //let mut dep_man_clos = use_signal(|| DEP_MANAGER.write().assign);
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -196,7 +194,8 @@ fn App() -> Element {
 
                                         select::Select::<String> { placeholder: "Select department",
                                         on_value_change: move |value: Option<String>| {
-                                            //DEP_MANAGER.write().assign_employee_to_department(employee.clone(), value);
+                                            DEP_MANAGER.write().assign_employee_to_department(employee.clone(), value);
+                                            print!("{}", DEP_MANAGER.read().departments().len());
                                         },
                                         select::SelectTrigger { aria_label: "Select Trigger", width: "12rem", select::SelectValue {} }
                                         select::SelectList { aria_label: "Select Demo",
@@ -218,21 +217,14 @@ fn App() -> Element {
                                             }
                                         }
                                     }
-                                    /*select::Select::<Option<String>> {
-                                        value: "{DEP_MANAGER.write().employees().get(employee)}",
-                                        select::SelectTrigger { aria_label: "Select Trigger", width: "12rem", select::SelectValue {} }
-                                        select::SelectList { aria_label: "Department",
-                                            select::SelectGroup {
-                                                select::SelectGroupLabel { "Departments" }
-                                            }
-                                        }
-                                    }*/
                                 }
                             }
                         }
                     }
                 }
             }
+            h1 { "Amount of departments: {DEP_MANAGER.read().departments().len():?}" }
+            h1 { "Amount of employees: {DEP_MANAGER.read().employees().len():?}"}
         }
     }
 }
