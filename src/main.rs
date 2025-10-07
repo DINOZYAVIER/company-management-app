@@ -78,44 +78,18 @@ fn App() -> Element {
         }
     };
 
-    let mut input_dep = use_signal(|| String::new());
-    let mut input_empl = use_signal(|| String::new());
+    let mut input_dep = use_signal(String::new);
+    let mut input_empl = use_signal(String::new);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet{
+            href: asset!("/assets/tailwind.css") },
         div {
-            display: "flex",
-            justify_content: "center",
-            flex_direction: "column",
-            align_items: "center",
             table {
                 tr {
                     th {
                         h1 { "Departments" }
-                        table {
-                            thead {
-                                tr {
-                                    th { "Department Name" }
-                                }
-                            }
-                            tbody {
-
-                                for (index, department) in DEP_MANAGER.read().departments().into_iter().enumerate() {
-                                    tr {
-                                        td {
-                                            div {
-                                                style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
-                                                "{department}"
-                                                button { onclick: move |_event| DEP_MANAGER.write().remove_department(index),
-                                                "X"}
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
                         div {
-                            style: "display: flex; justify-content: center; align-items: center; width: 100%;",
                             input {
                                 r#type: "text",
                                 placeholder: "Enter department name",
@@ -125,24 +99,15 @@ fn App() -> Element {
                                 "Add Department"
                             }
                         }
-                    }
-                    th {
-                        h1 { "Employees" }
                         table {
-                            thead {
-                                tr {
-                                    th { "Employee Name" }
-                                }
-                            }
                             tbody {
 
-                                for (index, employee) in DEP_MANAGER.read().employees().into_iter().enumerate() {
+                                for (index, department) in DEP_MANAGER.read().departments().into_iter().enumerate() {
                                     tr {
                                         td {
                                             div {
-                                                style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
-                                                "{employee}"
-                                                button { onclick: move |_event| DEP_MANAGER.write().remove_employee(index),
+                                                "{department}"
+                                                button { onclick: move |_event| DEP_MANAGER.write().remove_department(index),
                                                 "X"}
                                             }
                                         }
@@ -150,8 +115,10 @@ fn App() -> Element {
                                 }
                             }
                         }
+                    }
+                    th {
+                        h1 { "Employees" }
                         div {
-                            style: "display: flex; justify-content: center; align-items: center; width: 100%;",
                             input {
                                 r#type: "text",
                                 placeholder: "Enter employee name",
@@ -159,6 +126,22 @@ fn App() -> Element {
                             }
                             button {  onclick: move |_event| DEP_MANAGER.write().add_employee(input_empl().clone()),
                                 "Add Employee"
+                            }
+                        }
+                        table {
+                            tbody {
+
+                                for (index, employee) in DEP_MANAGER.read().employees().into_iter().enumerate() {
+                                    tr {
+                                        td {
+                                            div {
+                                                "{employee}"
+                                                button { onclick: move |_event| DEP_MANAGER.write().remove_employee(index),
+                                                "X"}
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -175,9 +158,6 @@ fn App() -> Element {
                         tr {
                             td {
                                 div {
-                                    style: "display: flex; justify-content: space-between; align-items: center; width: 100%;",
-                                    "{employee}"
-
                                         select::Select::<String> {
                                         placeholder: "Select department",
                                         on_value_change: move |value: Option<String>| {
